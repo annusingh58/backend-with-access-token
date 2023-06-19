@@ -1,6 +1,7 @@
 import encrypt from "encryptjs";
 import User from "../modals/user.js";
 import { idGenerator } from "generate-custom-id";
+import axios from "axios";
 
 export const register =async(req,res)=>{
     try{
@@ -46,15 +47,38 @@ export const register =async(req,res)=>{
 export const regeneratekey =async(req,res)=>{
     try{
 
-        const{email,_id}=req.body;
-        if(!email)return res.send("email is required");
-        if(!_id)return res.send("_id is required")
+        const{email,password}=req.body;
+        if(!email) return res.send("email is required");
+        if(!password) return res.send("password is required")
 
-        const response =await User.find({email}).exec();
-        (!response.length)return res.send("user not found");
+        const response = await User.find({email}).exec();
+        if(!response.length) return res.send ("User not found");
+        
+        var secretkey="pin";
 
-    }
+        var decipherkey =encrypt.decrypt(response[0].password,secretkey,256);
+        if(decipherkey==password){
+            const id = idGenerator("example",2);
+
+            if(response[0].accesstoken){
+                return res.send("token already generated")
+            }
+            else{
+                await User.findOneAndUpdate({email},{accesstoken:id});
+                setTimeout(async()=>{
+                    await User.updateOne({email},{$unset:{accesstoken:1}});
+                },60*1000);
+                return res.send("key creates")
+            }
+
+            }
+            else{
+                return res.send("password not matched")
+            }
+
+        } 
     catch(error){
         return res.send(error);
     }
 }
+

@@ -1,11 +1,12 @@
 import express from "express";
-import { register } from "../Controllers/UserControllers.js";
+import { regeneratekey, register } from "../Controllers/UserControllers.js";
 
 
 
 const router = express.Router();
 
-router.post('/register',register)
+router.post('/register',register);
+router.post('/regeneratekey',regeneratekey)
 
 
 export default router;
